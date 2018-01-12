@@ -12,4 +12,18 @@ module.exports = {
             callback(ticker[`${coinSymbol}${exchangePair}`])
         })
     },
+
+    buyOrder: function(error, coinSymbol, exchangePair, price, quantity) {
+        if (error) return console.error(error);
+        console.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol}${exchangePair} at ${price} at ${new Date().toLocaleTimeString()}.`);
+        //Binance.buy(`${coinSymbol}${exchangePair}`, quantity, price);
+    },
+
+    sellOrder: function(error, coinSymbol, exchangePair, price, callback) {
+
+    },
+
+    cancelOrder: function(error, coinSymbol, exchangePair, callback) {
+
+    }
 }
