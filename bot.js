@@ -1,5 +1,6 @@
 const Discord = require('discord.js');
 const Binance = require('node-binance-api');
+const Config = require('./config');
 var client = new Discord.Client();
 
 // Define global conditions that all must be true in order to initiate a trade.
@@ -20,36 +21,33 @@ function checkPrice(targetSymbol, exchangeSymbol) {
     })
 }
 
-// Example messages.
-var message1 = `Coin is: $nav
-Goal (btc): 0.0004900
-Goal: (eth): 0.0072000
-Trade safe, Don't buy higher than target!`
-var message2 = `The coin is $KMD (Komodo)
-Our goal is (btc) 0.0011800
-Current price (btc): 0.0006700
-Buy safe! Goodluck!`
+Config.messages.forEach(function(message) {
+    parseMessage(message.toUpperCase());
+});
 
 // Parse the message to return the data we need.
 function parseMessage(message) {
-    // Expected output: NAV
-    console.log(parseCoin(message1));
-
-    // Expected output: KMD
-    console.log(parseCoin(message2));
+    var coin = parseCoin(message);
+    if (coin != undefined) {
+        validCoin = validateCoin(coin)
+        console.log(validCoin);
+    }
 }
 
 // Extract the ticker symbol from the message.
 function parseCoin(message) {
     var match = message.match(/\$[A-Za-z0-9]{2,5}/)
     if (match != null && match.length > 0) {
-        // Rather than setting valid coin to true here, we should instead ensure its validity by doing a binance call to check the price of that coin. For now, this implementation works.
-        validCoin = true;
-        return match[0].replace('%', '');
+        return match[0].replace('$', '');
     } 
     else {
-        return 'Coin not found!';
+        return undefined;
     }
+}
+
+// Validate that the coin exists in Binance and has an exchange pair to at least BTC.
+function validateCoin(coin) {
+    return checkPrice(coin, 'BTC') != undefined;
 }
 
 // Extract the target price from the message.
@@ -60,7 +58,6 @@ function parseTargetPrice(message) {
     // Validate there is BTC and/or ETH.
     hasBtc = message.indexOf('(BTC)') != -1;
     hasEth = message.indexOf('(ETH)') != -1;
-
     if (!hasBtc) {
         hasBtc = message.indexOf(' BTC ') != -1;
     }
