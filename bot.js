@@ -1,6 +1,6 @@
 const Discord = require('discord.js');
-const Binance = require('node-binance-api');
 const Config = require('./config');
+const Binance = require('./binance')
 var client = new Discord.Client();
 
 // Define global conditions that all must be true in order to initiate a trade.
@@ -8,18 +8,6 @@ var validCoin = false;
 var validTargetPrice = false;
 var noRecentOrder = true;
 var noRecentCancel = true;
-
-Binance.options({
-    'APIKEY': process.env.BINANCE_API_KEY.trim(),
-    'APISECRET': process.env.BINANCE_API_SECRET.trim()
-});
-
-// Check the current price of a symbol/exchange pair. Example: ETHUSDT (Ethereum's current price in USD)
-function checkPrice(targetSymbol, exchangeSymbol) {
-    Binance.prices(function(ticker) {
-        console.log(ticker[targetSymbol + exchangeSymbol])
-    })
-}
 
 Config.messages.forEach(function(message) {
     parseMessage(message.toUpperCase());
@@ -29,8 +17,10 @@ Config.messages.forEach(function(message) {
 function parseMessage(message) {
     var coin = parseCoin(message);
     if (coin != undefined) {
-        validCoin = validateCoin(coin)
-        console.log(validCoin);
+        validateCoin(null, coin, function(valid) {
+            validCoin = valid;
+            console.log(validCoin);
+        })
     }
 }
 
@@ -46,8 +36,11 @@ function parseCoin(message) {
 }
 
 // Validate that the coin exists in Binance and has an exchange pair to at least BTC.
-function validateCoin(coin) {
-    return checkPrice(coin, 'BTC') != undefined;
+function validateCoin(error, coin, callback) {
+    Binance.checkPrice(null, coin, 'BTC', function(price) {
+        var valid = price != undefined;
+        callback(valid);
+    });
 }
 
 // Extract the target price from the message.
