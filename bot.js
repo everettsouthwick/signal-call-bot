@@ -38,7 +38,7 @@ function validateTargetPrice(coin, targetPrice) {
         if (targetPrice < currentPrice) {
             validTargetPrice = false;
         // If the target price is less than double of the current price, it's likely the target price. Also, we don't want to buy anything that's more than 0.04 ETH per coin.
-        } else if ((targetPrice / 2) < currentPrice && currentPrice < 0.05) {
+        } else if ((targetPrice / 2) < currentPrice && currentPrice < 0.04) {
             validTargetPrice = true;
             calculateBuyOrder(coin, targetPrice, currentPrice)
         }
@@ -80,7 +80,7 @@ function calculateBuyMaxPotentialGain(targetPrice, buyPrice) {
 }
 
 function calculateBuyQuantity(buyPrice) {
-    return Math.floor(0.05 / buyPrice);
+    return Math.floor(0.04 / buyPrice);
 }
 
 //#endregion
