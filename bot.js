@@ -58,8 +58,15 @@ function parseTargetPrice(message) {
     var hasBtc, hasEth;
 
     // Validate there is BTC and/or ETH.
-    hasBtc = message.indexOf('BTC') != -1;
-    hasEth = message.indexOf('ETH') != -1;
+    hasBtc = message.indexOf('(BTC)') != -1;
+    hasEth = message.indexOf('(ETH)') != -1;
+
+    if (!hasBtc) {
+        hasBtc = message.indexOf(' BTC ') != -1;
+    }
+    if (!hasEth) {
+        hasEth = message.indexOf(' ETH ') != -1;
+    }
 
     // Search for numbers in the message and sort them from lowest to highest.
     var numMatches = message.match(/0\.[0-9]{1,8}/g);
