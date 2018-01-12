@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const Config = require('./config');
-const Binance = require('./binance')
+const Binance = require('./binance');
+const Parser = require('./parser');
 var client = new Discord.Client();
 
 // Define global conditions that all must be true in order to initiate a trade.
@@ -15,54 +16,35 @@ Config.messages.forEach(function(message) {
 
 // Parse the message to return the data we need.
 function parseMessage(message) {
-    var coin = parseCoin(message);
-    if (coin != undefined) {
-        validateCoin(null, coin, function(valid) {
-            validCoin = valid;
-            console.log(validCoin);
-        })
-    }
-}
-
-// Extract the ticker symbol from the message.
-function parseCoin(message) {
-    var match = message.match(/\$[A-Za-z0-9]{2,5}/)
-    if (match != null && match.length > 0) {
-        return match[0].replace('$', '');
-    } 
-    else {
-        return undefined;
-    }
+    var coin = Parser.parseCoin(message);
+    validateCoin(coin);
+    var targetPrice = Parser.parseTargetPrice(message);
+    validateTargetPrice(coin, targetPrice);
 }
 
 // Validate that the coin exists in Binance and has an exchange pair to at least BTC.
-function validateCoin(error, coin, callback) {
+function validateCoin(coin) {
     Binance.checkPrice(null, coin, 'BTC', function(price) {
-        var valid = price != undefined;
-        callback(valid);
+        validCoin = price != undefined;
     });
 }
 
-// Extract the target price from the message.
-function parseTargetPrice(message) {
-    // Initialize booleans for whether or not there are certain parameters we're looking for.
-    var hasBtc, hasEth;
-
-    // Validate there is BTC and/or ETH.
-    hasBtc = message.indexOf('(BTC)') != -1;
-    hasEth = message.indexOf('(ETH)') != -1;
-    if (!hasBtc) {
-        hasBtc = message.indexOf(' BTC ') != -1;
-    }
-    if (!hasEth) {
-        hasEth = message.indexOf(' ETH ') != -1;
-    }
-
-    // Search for numbers in the message and sort them from lowest to highest.
-    var numMatches = message.match(/0\.[0-9]{1,8}/g);
-    numMatches.sort();
-
-    // Search for Ethereum prices at runtime if they only supply BTC values, otherwise use the target price they specify for ETH.
+// Validate that the coin is within range of ETH, and is not lower than the current price of ETH.
+function validateTargetPrice(coin, targetPrice) {
+    Binance.checkPrice(null, coin, 'ETH', function(price) {
+        console.log(`Target Price: ${targetPrice} :: Current Price ${price}`)
+        // If the target price is less than the current price, it's not a valid target price.
+        if (targetPrice < price) {
+            console.log('hit first');
+            validTargetPrice = false;
+        // If the target price is less than double of the current price, it's likely the target price.
+        } else if ((targetPrice / 2) < price) {
+            console.log('hit second');
+            validTargetPrice = true;
+        } else {
+            console.log('hit third');
+        }
+    })
 }
 
 //#region Discord functionality
