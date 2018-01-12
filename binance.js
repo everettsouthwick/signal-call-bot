@@ -16,20 +16,33 @@ module.exports = {
     buyOrder: function(error, coinSymbol, exchangePair, price, quantity, callback) {
         if (error) return console.error(error);
         console.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} at ${new Date().toLocaleTimeString()}.\n`);
-        /*Binance.buy(`${coinSymbol}${exchangePair}`, Math.floor(quantity), parseFloat(price).toFixed(8), {}, function(response) {
+        Binance.buy(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
-        });*/
+        });
     },
 
     sellOrder: function(error, coinSymbol, exchangePair, price, quantity, potentialGain, callback) {
         if (error) return console.error(error);
         console.log(`BINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}% at ${new Date().toLocaleTimeString()}.\n`);
-        /*Binance.sell(`${coinSymbol}${exchangePair}`, Math.floor(quantity), parseFloat(price).toFixed(8), {}, function(response) {
+        Binance.sell(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
-        })*/
+        })
     },
 
-    cancelOrder: function(error, coinSymbol, exchangePair, callback) {
+    cancelOrder: function(error, id, side, coinSymbol, exchangePair, callback) {
+        if (error) return console.error(error);
+        console.log(`BINANCE :: Canceling ${side} order for ${coinSymbol}.\n`)
+        Binance.cancel(`${coinSymbol}${exchangePair}`, id, function(response, symbol) {
+            callback(response, symbol);
+        })
+    },
 
+    checkOrderStatus: function(error, id, side, coinSymbol, exchangePair, callback) {
+        if (error) return console.error(error);
+        console.log(`BINANCE :: Checking status of ${side} order for ${coinSymbol}\n`);
+        Binance.orderStatus(`${coinSymbol}${exchangePair}`, id, function(orderStatus, symbol) {
+            console.log(orderStatus);
+            callback(orderStatus, symbol);
+        })
     }
 }

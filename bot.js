@@ -11,9 +11,9 @@ var highPotentialGain = false; // Potential gain >25%
 var noRecentOrder = true;
 var noRecentCancel = true;
 
-Config.messages.forEach(function(message) {
-    parseMessage(message.toUpperCase());
-});
+// Config.messages.forEach(function(message) {
+//     parseMessage(message.toUpperCase());
+// });
 
 // Parse the message to return the data we need.
 function parseMessage(message) {
@@ -50,7 +50,6 @@ function validateTargetPrice(coin, targetPrice) {
 function calculateBuyOrder(coin, targetPrice, currentPrice) {
     // The buy price should be the current price + 3%.
     var buyPrice = calculateBuyPrice(currentPrice);
-    console.log(buyPrice);
 
     // Calculate the potential gain based on the buy price.
     var potentialGain = calculateBuyMaxPotentialGain(targetPrice, buyPrice);
@@ -67,12 +66,15 @@ function calculateBuyOrder(coin, targetPrice, currentPrice) {
         Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {
             noRecentOrder = false;
             calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain);
+            if (response.status.trim().toUpperCase() != 'FILLED') {
+                stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin);
+            }
         })
     }
 }
 
 function calculateBuyPrice(currentPrice) {
-    return parseFloat(currentPrice * (1 + 0.03)).toFixed(7);
+    return parseFloat(currentPrice * (1 + 0.03)).toFixed(8);
 }
 
 function calculateBuyMaxPotentialGain(targetPrice, buyPrice) {
@@ -81,6 +83,17 @@ function calculateBuyMaxPotentialGain(targetPrice, buyPrice) {
 
 function calculateBuyQuantity(buyPrice) {
     return Math.floor(0.04 / buyPrice);
+}
+
+function stageCancelOrder(id, side, coin) {
+    setTimeout(function() {
+        Binance.checkOrderStatus(null, id, side, coin, 'ETH', function(orderStatus, symbol) {
+            if (orderStatus.status.trim().toUpperCase() != 'FILLED') {
+                Binance.cancelOrder(null, id, side, coin, 'ETH', function(response, coinSymbol) {
+                })
+            }
+        })
+    }, 1000)
 }
 
 //#endregion
@@ -108,7 +121,7 @@ function calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGai
 
 
 function calculateSellPrice(i, buyPrice, sellOrderGain) {
-    return parseFloat(buyPrice * (1 + (sellOrderGain / 100)).toFixed(7));
+    return parseFloat(buyPrice * (1 + (sellOrderGain / 100)).toFixed(8));
 }
 
 function calculateSellPotentialGain(i, potentialGain) {
