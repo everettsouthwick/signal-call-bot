@@ -4,6 +4,9 @@ var client = new Discord.Client();
 
 // Define global conditions that all must be true in order to initiate a trade.
 var validCoin = false;
+var validTargetPrice = false;
+var noRecentOrder = true;
+var noRecentCancel = true;
 
 Binance.options({
     'APIKEY': process.env.BINANCE_API_KEY.trim(),
