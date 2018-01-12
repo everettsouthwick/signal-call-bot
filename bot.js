@@ -30,37 +30,111 @@ function validateCoin(coin) {
     });
 }
 
-console.log(parseFloat(100 * (1 + 0.1)));
-
 // Validate that the coin is within range of ETH, and is not lower than the current price of ETH.
 function validateTargetPrice(coin, targetPrice) {
-    Binance.checkPrice(null, coin, 'ETH', function(price) {
-        console.log(`Target Price: ${targetPrice} :: Current Price ${price}`)
+    Binance.checkPrice(null, coin, 'ETH', function(currentPrice) {
+        console.log(`Target Price: ${targetPrice} :: Current Price ${currentPrice}`)
         // If the target price is less than the current price, it's not a valid target price.
-        if (targetPrice < price) {
+        if (targetPrice < currentPrice) {
             validTargetPrice = false;
-        // If the target price is less than double of the current price, it's likely the target price. Also, we don't want to buy anything that's more than 0.05 ETH per coin.
-        } else if ((targetPrice / 2) < price && price < 0.05) {
+        // If the target price is less than double of the current price, it's likely the target price. Also, we don't want to buy anything that's more than 0.04 ETH per coin.
+        } else if ((targetPrice / 2) < currentPrice && currentPrice < 0.05) {
             validTargetPrice = true;
-
-            // The buy price should be the current price + 5%.
-            var buyPrice = (price * (1 + 0.05));
-            // Calculate the potential gain based on the buy price.
-            var potentialGain = Math.floor((targetPrice - price) / price * 100);
-            // We should only do this if the potential gains are greater than 25%.
-            highPotentialGain = potentialGain > 25;
-            // Calculate the quantity. We never want to spend more than 0.05 ETH.
-            var quantity = Math.floor(0.05 / buyPrice);
-
-            // Ensure that we've passed all the checks.
-            approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
-            if (approved) {
-                Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity)
-                noRecentOrder = false;
-            }
+            calculateBuyOrder(coin, targetPrice, currentPrice)
         }
     })
 }
+
+//#region Buy order logic
+
+function calculateBuyOrder(coin, targetPrice, currentPrice) {
+    // The buy price should be the current price + 3%.
+    var buyPrice = calculateBuyPrice(currentPrice);
+    console.log(buyPrice);
+
+    // Calculate the potential gain based on the buy price.
+    var potentialGain = calculateBuyMaxPotentialGain(targetPrice, buyPrice);
+    // We should only do this if the potential gains are greater than 25%.
+    highPotentialGain = potentialGain > 25;
+
+    // Calculate the quantity. We never want to spend more than 0.05 ETH.
+    var quantity = calculateBuyQuantity(buyPrice);
+
+    // Ensure that we've passed all the checks, and if we have, place the buy order.
+    approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
+
+    if (approved) {
+        Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {
+            noRecentOrder = false;
+            calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain);
+        })
+    }
+}
+
+function calculateBuyPrice(currentPrice) {
+    return parseFloat(currentPrice * (1 + 0.03)).toFixed(7);
+}
+
+function calculateBuyMaxPotentialGain(targetPrice, buyPrice) {
+    return Math.floor((targetPrice - buyPrice) / buyPrice * 100);
+}
+
+function calculateBuyQuantity(buyPrice) {
+    return Math.floor(0.05 / buyPrice);
+}
+
+//#endregion
+
+//#region Sell order logic
+
+function calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain) {
+    // Sell 25% of the quantity at 25% of the total gains, then another 25% at 50%, another 25% at 75%, and the remaining 25% at 90%.
+    for (var i = 1; i <= 4; i++) {
+        // Calculate the quantity to sell per order, favoring the lowest tier the most.
+        var sellQuantity = calculateSellQuantity(i, quantity);
+
+        // Tier the target price to help ensure that we sell all of our coins.
+        var sellOrderGain = calculateSellPotentialGain(i, potentialGain);
+
+        // Calculate the sell price
+        var sellPrice = calculateSellPrice(i, buyPrice, sellOrderGain);
+
+        Binance.sellOrder(null, coin, 'ETH', sellPrice, sellQuantity, sellOrderGain, function(response) {
+
+        })
+    }
+}
+
+
+
+function calculateSellPrice(i, buyPrice, sellOrderGain) {
+    return parseFloat(buyPrice * (1 + (sellOrderGain / 100)).toFixed(7));
+}
+
+function calculateSellPotentialGain(i, potentialGain) {
+    if (i == 4) {
+        return Math.floor(0.9 * potentialGain);
+    }
+    return Math.floor((i * 0.25) * potentialGain);
+
+}
+
+function calculateSellQuantity(i, quantity) {
+    var sellQuantity = 0;
+    if (quantity % 4 != 0) {
+        if (i == 1) {
+            sellQuantity = Math.floor(quantity / 4) + quantity % 4;
+        }
+        else {
+            sellQuantity = Math.floor(quantity / 4);
+        }
+    } else {
+        sellQuantity = quantity / 4;
+    }
+    return sellQuantity;
+}
+
+//#endregion
 
 //#region Discord functionality
 
@@ -86,6 +160,6 @@ client.on('message', function(message) {
 });
 
 // Login to Discord.
-client.login(process.env.DISCORD_TOKEN.trim())
+//client.login(process.env.DISCORD_TOKEN.trim())
 
 //#endregion

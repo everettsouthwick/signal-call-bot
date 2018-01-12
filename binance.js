@@ -13,14 +13,20 @@ module.exports = {
         })
     },
 
-    buyOrder: function(error, coinSymbol, exchangePair, price, quantity) {
+    buyOrder: function(error, coinSymbol, exchangePair, price, quantity, callback) {
         if (error) return console.error(error);
-        console.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol}${exchangePair} at ${price} at ${new Date().toLocaleTimeString()}.`);
-        //Binance.buy(`${coinSymbol}${exchangePair}`, quantity, price);
+        console.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} at ${new Date().toLocaleTimeString()}.\n`);
+        /*Binance.buy(`${coinSymbol}${exchangePair}`, Math.floor(quantity), parseFloat(price).toFixed(8), {}, function(response) {
+            callback(response);
+        });*/
     },
 
-    sellOrder: function(error, coinSymbol, exchangePair, price, callback) {
-
+    sellOrder: function(error, coinSymbol, exchangePair, price, quantity, potentialGain, callback) {
+        if (error) return console.error(error);
+        console.log(`BINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}% at ${new Date().toLocaleTimeString()}.\n`);
+        /*Binance.sell(`${coinSymbol}${exchangePair}`, Math.floor(quantity), parseFloat(price).toFixed(8), {}, function(response) {
+            callback(response);
+        })*/
     },
 
     cancelOrder: function(error, coinSymbol, exchangePair, callback) {
