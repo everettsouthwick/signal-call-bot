@@ -4,6 +4,23 @@ const Binance = require('./binance');
 const Parser = require('./parser');
 var client = new Discord.Client();
 
+// Get a list of all available coins on Binance right now.
+var allCoins = [];
+Binance.allCoins(null, function(balances) {
+    for (var coin in balances) {
+        // We don't care about ETH, BTC, or USDT.
+        if (coin.toUpperCase().trim() != 'ETH' || coin.toUpperCase().trim() == 'BTC' || coin.toUpperCase().trim() == 'USDT') {
+            allCoins.push(coin.toUpperCase().trim());
+        }
+    }
+    // If debug mode is enabled, we want to parse through the config messages.
+    if (Config.debug) {
+        Config.messages.forEach(function(message) {
+            parseMessage(message.toUpperCase());
+        });
+    }
+});
+
 // Define global conditions that all must be true in order to initiate a trade.
 var validCoin = false;
 var validTargetPrice = false;
@@ -11,13 +28,12 @@ var highPotentialGain = false; // Potential gain >25%
 var noRecentOrder = true;
 var noRecentCancel = true;
 
-// Config.messages.forEach(function(message) {
-//     parseMessage(message.toUpperCase());
-// });
+
+
 
 // Parse the message to return the data we need.
 function parseMessage(message) {
-    var coin = Parser.parseCoin(message);
+    var coin = Parser.parseCoin(message, allCoins);
     validateCoin(coin);
     var targetPrice = Parser.parseTargetPrice(message);
     validateTargetPrice(coin, targetPrice);
@@ -25,6 +41,7 @@ function parseMessage(message) {
 
 // Validate that the coin exists in Binance and has an exchange pair for ETH.
 function validateCoin(coin) {
+    if (Config.debug) { console.debug(`DEBUG :: Validating ${coin} has an ETH exchange on Binance.`); }
     Binance.checkPrice(null, coin, 'ETH', function(price) {
         validCoin = price != undefined;
     });
@@ -32,8 +49,9 @@ function validateCoin(coin) {
 
 // Validate that the coin is within range of ETH, and is not lower than the current price of ETH.
 function validateTargetPrice(coin, targetPrice) {
+    if (Config.debug) { console.debug(`DEBUG :: Validating ${coin} the price of the coin on Binance.`); }
     Binance.checkPrice(null, coin, 'ETH', function(currentPrice) {
-        console.log(`Target Price: ${targetPrice} :: Current Price ${currentPrice}`)
+        
         // If the target price is less than the current price, it's not a valid target price.
         if (targetPrice < currentPrice) {
             validTargetPrice = false;
@@ -42,12 +60,14 @@ function validateTargetPrice(coin, targetPrice) {
             validTargetPrice = true;
             calculateBuyOrder(coin, targetPrice, currentPrice)
         }
+        if (Config.debug) { console.debug(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`); }
     })
 }
 
 //#region Buy order logic
 
 function calculateBuyOrder(coin, targetPrice, currentPrice) {
+    if (Config.debug) { console.debug(`DEBUG :: Calculating buy order...`); }
     // The buy price should be the current price + 3%.
     var buyPrice = calculateBuyPrice(currentPrice);
 
@@ -62,6 +82,8 @@ function calculateBuyOrder(coin, targetPrice, currentPrice) {
     // Ensure that we've passed all the checks, and if we have, place the buy order.
     approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
 
+    if (Config.debug) { console.debug(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`); }
+    
     if (approved) {
         Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {
             noRecentOrder = false;
@@ -83,7 +105,7 @@ function calculateBuyOrder(coin, targetPrice, currentPrice) {
 }
 
 function calculateBuyPrice(currentPrice) {
-    return parseFloat(currentPrice * (1 + 0.03)).toFixed(8);
+    return parseFloat(currentPrice * (1 + 0.03)).toFixed(6);
 }
 
 function calculateBuyMaxPotentialGain(targetPrice, buyPrice) {
@@ -113,11 +135,12 @@ function stageCancelOrder(id, side, coin, buyPrice, time) {
 }
 
 function cleanRemainingBalance(coin, buyPrice) {
+    if (Config.debug) { console.debug(`DEBUG :: Cleaning up any remaining balance...`); }
     Binance.checkBalance(null, coin, function(balance) {
         // If there's any remaining balance of the coin, sell it.
         if (Math.floor(balance) > 0) {
             // We're going to sell it for a 1% gain, because at this point we just don't want to lose anything.
-            let sellPrice = parseFloat(buyPrice * (1 + 0.01).toFixed(8));
+            let sellPrice = parseFloat(buyPrice * (1 + 0.01).toFixed(6));
             Binance.sellOrder(null, coin, 'ETH', sellPrice, Math.floor(balance), '1', function(response) {
 
             });
@@ -129,6 +152,7 @@ function cleanRemainingBalance(coin, buyPrice) {
 //#region Sell order logic
 
 function calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain) {
+    if (Config.debug) { console.debug(`DEBUG :: Calculating sell orders...`); }
     // Sell 25% of the quantity at 25% of the total gains, then another 25% at 50%, another 25% at 75%, and the remaining 25% at 90%.
     for (var i = 1; i <= 4; i++) {
         // Calculate the quantity to sell per order, favoring the lowest tier the most.
@@ -140,6 +164,8 @@ function calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGai
         // Calculate the sell price
         var sellPrice = calculateSellPrice(i, buyPrice, sellOrderGain);
 
+        if (Config.debug) { console.debug(`DEBUG :: (\$${coin}) Sell Price: ${sellPrice} Potential Gain: ${sellOrderGain} Quantity: ${sellQuantity}`); }
+
         Binance.sellOrder(null, coin, 'ETH', sellPrice, sellQuantity, sellOrderGain, function(response) {
             // We want to cancel all of our sell orders if they haven't been filled after 5 minutes.
             stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin, buyPrice, 300000)
@@ -150,7 +176,7 @@ function calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGai
 
 
 function calculateSellPrice(i, buyPrice, sellOrderGain) {
-    return parseFloat(buyPrice * (1 + (sellOrderGain / 100)).toFixed(8));
+    return parseFloat(buyPrice * (1 + (sellOrderGain / 100)).toFixed(6));
 }
 
 function calculateSellPotentialGain(i, potentialGain) {
@@ -202,6 +228,6 @@ client.on('message', function(message) {
 });
 
 // Login to Discord.
-client.login(process.env.DISCORD_TOKEN.trim())
+if (!Config.debug) { client.login(process.env.DISCORD_TOKEN.trim()); }
 
 //#endregion
