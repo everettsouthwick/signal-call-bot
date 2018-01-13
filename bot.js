@@ -4,15 +4,6 @@ const Binance = require('./binance');
 const Parser = require('./parser');
 var client = new Discord.Client();
 
-var timer = 0;
-setInterval(function() {
-    timer++;
-}, 1)
-
-Binance.checkPrice(null, 'REQ', 'ETH', function(price) {
-    console.log('That took ' + timer + ' milliseconds to call the API.');
-})
-
 // Define global conditions that all must be true in order to initiate a trade.
 var validCoin = false;
 var validTargetPrice = false;
@@ -74,9 +65,18 @@ function calculateBuyOrder(coin, targetPrice, currentPrice) {
     if (approved) {
         Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {
             noRecentOrder = false;
-            calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain);
+            
             if (response.status.trim().toUpperCase() != 'FILLED') {
-                stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin);
+                // If the order isn't immediately filled, we want to wait 1 second before creating the sell orders.
+                setTimeout(function() {
+                    calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain);
+                }, 1000)
+
+                // We want to cancel the buy order after 5 seconds if it isn't filled.
+                stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin, buyPrice, 5000);
+            } else {
+                // If the order is immediately filled, we want to start creating the sell orders.
+                calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain);
             }
         })
     }
@@ -94,18 +94,37 @@ function calculateBuyQuantity(buyPrice) {
     return Math.floor(0.04 / buyPrice);
 }
 
-function stageCancelOrder(id, side, coin) {
+//#endregion
+
+function stageCancelOrder(id, side, coin, buyPrice, time) {
     setTimeout(function() {
         Binance.checkOrderStatus(null, id, side, coin, 'ETH', function(orderStatus, symbol) {
             if (orderStatus.status.trim().toUpperCase() != 'FILLED') {
                 Binance.cancelOrder(null, id, side, coin, 'ETH', function(response, coinSymbol) {
+                    noRecentCancel = false;
+                    if (side == "sell") {
+                        // Once we cancel the open sell orders (if any), we want to create a sell order to sell any remaining balance for what we bought it for originally to prevent loss.
+                        cleanRemainingBalance(coin, buyPrice);
+                    }
                 })
             }
         })
-    }, 1000)
+    }, time)
 }
 
-//#endregion
+function cleanRemainingBalance(coin, buyPrice) {
+    Binance.checkBalance(null, coin, function(balance) {
+        // If there's any remaining balance of the coin, sell it.
+        if (Math.floor(balance) > 0) {
+            // We're going to sell it for a 1% gain, because at this point we just don't want to lose anything.
+            let sellPrice = parseFloat(buyPrice * (1 + 0.01).toFixed(8));
+            Binance.sellOrder(null, coin, 'ETH', sellPrice, Math.floor(balance), '1', function(response) {
+
+            });
+        }
+    })
+}
+
 
 //#region Sell order logic
 
@@ -122,7 +141,8 @@ function calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGai
         var sellPrice = calculateSellPrice(i, buyPrice, sellOrderGain);
 
         Binance.sellOrder(null, coin, 'ETH', sellPrice, sellQuantity, sellOrderGain, function(response) {
-
+            // We want to cancel all of our sell orders if they haven't been filled after 5 minutes.
+            stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin, buyPrice, 300000)
         })
     }
 }
@@ -174,7 +194,7 @@ client.on('message', function(message) {
 
         // If it is from the correct guild & the correct channel, try parsing it.
         if(isGuild && isChannel) {
-            parseMessage(message.toUpperCase());
+            parseMessage(message.content.toUpperCase());
         }
     }
     // We don't care about exception handling.
@@ -182,6 +202,6 @@ client.on('message', function(message) {
 });
 
 // Login to Discord.
-//client.login(process.env.DISCORD_TOKEN.trim())
+client.login(process.env.DISCORD_TOKEN.trim())
 
 //#endregion

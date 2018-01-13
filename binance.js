@@ -26,23 +26,31 @@ module.exports = {
         console.log(`BINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}% at ${new Date().toLocaleTimeString()}.\n`);
         Binance.sell(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
-        })
+        });
     },
 
     cancelOrder: function(error, id, side, coinSymbol, exchangePair, callback) {
         if (error) return console.error(error);
-        console.log(`BINANCE :: Canceling ${side} order for ${coinSymbol}.\n`)
+        console.log(`BINANCE :: Canceling ${side} order for ${coinSymbol} at ${new Date().toLocaleTimeString()}.\n`)
         Binance.cancel(`${coinSymbol}${exchangePair}`, id, function(response, symbol) {
             callback(response, symbol);
-        })
+        });
     },
 
     checkOrderStatus: function(error, id, side, coinSymbol, exchangePair, callback) {
         if (error) return console.error(error);
-        console.log(`BINANCE :: Checking status of ${side} order for ${coinSymbol}\n`);
+        console.log(`BINANCE :: Checking status of ${side} order for ${coinSymbol} at ${new Date().toLocaleTimeString()}.\n`);
         Binance.orderStatus(`${coinSymbol}${exchangePair}`, id, function(orderStatus, symbol) {
-            console.log(orderStatus);
             callback(orderStatus, symbol);
-        })
+        });
+    },
+
+    checkBalance: function(error, coinSymbol, callback) {
+        if (error) return console.error(error);
+        console.log(`BINANCE :: Checking balance of ${coinSymbol} at ${new Date().toLocaleTimeString()}.\n`)
+        Binance.balance(function(balances) {
+            let balance = balances[coinSymbol].available;
+            callback(balance);
+        });
     }
 }
