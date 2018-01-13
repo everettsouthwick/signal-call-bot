@@ -4,6 +4,15 @@ const Binance = require('./binance');
 const Parser = require('./parser');
 var client = new Discord.Client();
 
+var timer = 0;
+setInterval(function() {
+    timer++;
+}, 1)
+
+Binance.checkPrice(null, 'REQ', 'ETH', function(price) {
+    console.log('That took ' + timer + ' milliseconds to call the API.');
+})
+
 // Define global conditions that all must be true in order to initiate a trade.
 var validCoin = false;
 var validTargetPrice = false;
@@ -23,9 +32,9 @@ function parseMessage(message) {
     validateTargetPrice(coin, targetPrice);
 }
 
-// Validate that the coin exists in Binance and has an exchange pair to at least BTC.
+// Validate that the coin exists in Binance and has an exchange pair for ETH.
 function validateCoin(coin) {
-    Binance.checkPrice(null, coin, 'BTC', function(price) {
+    Binance.checkPrice(null, coin, 'ETH', function(price) {
         validCoin = price != undefined;
     });
 }
