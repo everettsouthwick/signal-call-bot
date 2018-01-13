@@ -1,0 +1,24 @@
+{
+  "name": "signal-call-bot",
+  "version": "1.0.0",
+  "description": "This is how we make millions",
+  "main": "bot.js",
+  "dependencies": {
+    "discord.js": "^11.2.1",
+    "node-binance-api": "^0.3.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/everettsouthwick/signal-call-bot.git"
+  },
+  "author": "Everett Southwick",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/everettsouthwick/signal-call-bot/issues"
+  },
+  "homepage": "https://github.com/everettsouthwick/signal-call-bot#readme"
+}
