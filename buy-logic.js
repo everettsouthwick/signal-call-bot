@@ -1,5 +1,8 @@
 const Config = require('./config');
 
+// requires logs.js
+const logs = require('./logs');
+
 function calculateBuyPrice(currentPrice) {
     return parseFloat(currentPrice * (1 + 0.03)).toFixed(6);
 }
@@ -29,7 +32,10 @@ module.exports = {
         // Ensure that we've passed all the checks, and if we have, place the buy order.
         approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
 
-        if (Config.debug) { console.debug(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`); }
+        if (Config.debug) { 
+            console.debug(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
+            logs.calculateBuyOrderLog(coin, buyPrice, potentialGain, quantity, approved);
+        }
         
         if (approved) {
             Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {

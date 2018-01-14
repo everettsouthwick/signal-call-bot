@@ -4,6 +4,8 @@ const Binance = require('./binance');
 const Parser = require('./parser');
 const Buy = require('./buy-logic');
 const Sell = require('./sell-logic');
+const logs = require('./logs');
+
 var client = new Discord.Client();
 
 // Remove the default arguments from the process.
@@ -66,7 +68,10 @@ function validateTargetPrice(coin, targetPrice) {
             validTargetPrice = true;
             calculateBuyOrder(coin, targetPrice, currentPrice)
         }
-        if (Config.debug) { console.debug(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`); }
+        if (Config.debug) {
+            console.debug(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`);
+            logs.validateTargetPrice(coin, targetPrice, validateTargetPrice);
+        }
     })
 }
 
