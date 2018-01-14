@@ -35,7 +35,7 @@ module.exports = {
             Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {
                 noRecentOrder = false;
                 
-                if (response.status.trim().toUpperCase() != 'FILLED') {
+                if (response.status.trim().toLowerCase() != 'FILLED') {
                     // If the order isn't immediately filled, we want to wait 1 second before creating the sell orders.
                     setTimeout(function() {
                         calculateSellOrders(coin, buyPrice, targetPrice, quantity, potentialGain);

@@ -8,7 +8,7 @@ var client = new Discord.Client();
 
 // Remove the default arguments from the process.
 var args = process.argv.slice(2);
-var manual = args[0].trim().toUpperCase() == "MANUAL";
+var manual = args[0].trim().toLowerCase() == "MANUAL";
 // Check to see if this is a manual entry.
 if (manual) {
     // We know the coin is valid because it's manual.
@@ -22,14 +22,14 @@ var allCoins = [];
 Binance.allCoins(null, function(balances) {
     for (var coin in balances) {
         // We don't care about ETH, BTC, or USDT.
-        if (coin.toUpperCase().trim() != 'ETH' || coin.toUpperCase().trim() == 'BTC' || coin.toUpperCase().trim() == 'USDT') {
-            allCoins.push(coin.toUpperCase().trim());
+        if (coin.toLowerCase().trim() != 'ETH' || coin.toLowerCase().trim() == 'BTC' || coin.toLowerCase().trim() == 'USDT') {
+            allCoins.push(coin.toLowerCase().trim());
         }
     }
     // If debug mode is enabled, we want to parse through the config messages.
     if (Config.debug) {
         Config.messages.forEach(function(message) {
-            parseMessage(message.toUpperCase());
+            parseMessage(message.toLowerCase());
         });
     }
 });
@@ -74,7 +74,7 @@ function validateTargetPrice(coin, targetPrice) {
 function stageCancelOrder(id, side, coin, buyPrice, time) {
     setTimeout(function() {
         Binance.checkOrderStatus(null, id, side, coin, 'ETH', function(orderStatus, symbol) {
-            if (orderStatus.status.trim().toUpperCase() != 'FILLED') {
+            if (orderStatus.status.trim().toLowerCase() != 'FILLED') {
                 Binance.cancelOrder(null, id, side, coin, 'ETH', function(response, coinSymbol) {
                     noRecentCancel = false;
                     if (side == "sell") {
@@ -113,11 +113,11 @@ client.on('message', function(message) {
     // Error catching because sometimes they return different types, and we don't care about the other types they return (VoiceChannel/DirectMessage).
     try {
         var isGuild = message.channel.guild.id.trim() == process.env.DISCORD_GUILD_ID.trim();
-        var isChannel = message.channel.name.toUpperCase().trim() == process.env.DISCORD_CHANNEL_NAME.toUpperCase().trim()
+        var isChannel = message.channel.name.toLowerCase().trim() == process.env.DISCORD_CHANNEL_NAME.toLowerCase().trim()
 
         // If it is from the correct guild & the correct channel, try parsing it.
         if(isGuild && isChannel) {
-            parseMessage(message.content.toUpperCase());
+            parseMessage(message.content.toLowerCase());
         }
     }
     // We don't care about exception handling.

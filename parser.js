@@ -8,7 +8,7 @@ module.exports = {
         else {
             var split = message.replace("\n", " ").replace("(", "").replace(")", "").split(" ");
             for (var i = 0; i < split.length; i++) {
-                var index = allCoins.indexOf(split[i].toUpperCase().trim());
+                var index = allCoins.indexOf(split[i].toLowerCase().trim());
                 if (index != -1) {
                     return allCoins[index];
                     break;
