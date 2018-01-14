@@ -14,3 +14,8 @@ Buy safe! Goodluck!`);
 
 exports.messages = messages;
 exports.debug = true;
+exports.validCoin = false;
+exports.validTargetPrice = false;
+exports.highPotentialGain = false;
+exports.noRecentOrder = true;
+exports.noRecentCancel = true;
