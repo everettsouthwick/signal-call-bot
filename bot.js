@@ -4,6 +4,24 @@ const Binance = require('./binance');
 const Parser = require('./parser');
 var client = new Discord.Client();
 
+// Define global conditions that all must be true in order to initiate a trade.
+var validCoin = false;
+var validTargetPrice = false;
+var highPotentialGain = false; // Potential gain >25%
+var noRecentOrder = true;
+var noRecentCancel = true;
+
+// Remove the default arguments from the process.
+var args = process.argv.slice(2);
+var manual = args[0].trim().toUpperCase() == "MANUAL";
+// Check to see if this is a manual entry.
+if (manual) {
+    // We know the coin is valid because it's manual.
+    validCoin = true;
+    // Validate the target price entered, we know it's valid, we just need to call this to validate the current price as well as trigger the buy and sell logic.
+    validateTargetPrice(args[1], args[2]);
+}
+
 // Get a list of all available coins on Binance right now.
 var allCoins = [];
 Binance.allCoins(null, function(balances) {
@@ -20,13 +38,6 @@ Binance.allCoins(null, function(balances) {
         });
     }
 });
-
-// Define global conditions that all must be true in order to initiate a trade.
-var validCoin = false;
-var validTargetPrice = false;
-var highPotentialGain = false; // Potential gain >25%
-var noRecentOrder = true;
-var noRecentCancel = true;
 
 
 
@@ -228,6 +239,6 @@ client.on('message', function(message) {
 });
 
 // Login to Discord.
-if (!Config.debug) { client.login(process.env.DISCORD_TOKEN.trim()); }
+if (!Config.debug && !manual) { client.login(process.env.DISCORD_TOKEN.trim()); }
 
 //#endregion
