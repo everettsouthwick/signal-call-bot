@@ -46,7 +46,7 @@ module.exports = {
             let sellPrice = calculateSellPrice(i, buyPrice, sellOrderPotentialGain);
     		
 			let approved = sellQuantity > 0;
-			Logging.log(`calculateBuyOrder(): sellPrice: ${sellPrice}. sellQuantity: ${sellQuantity}. sellOrderPotentialGain: ${sellOrderPotentialGain}. approved: ${approved}.`);
+			Logging.log(`calculateSellOrders(): sellPrice: ${sellPrice}. sellQuantity: ${sellQuantity}. sellOrderPotentialGain: ${sellOrderPotentialGain}. approved: ${approved}.`);
 			
 			if (approved) {
 	            Binance.sellOrder(null, coin, 'ETH', sellPrice, sellQuantity, sellOrderPotentialGain, function(response) {
