@@ -17,8 +17,8 @@ function calculateBuyQuantity(buyPrice) {
 
 module.exports = {
     calculateBuyOrder: function(coin, targetPrice, currentPrice) {
-        // CAHNGE THIS CONSOLE.DEBUG TO LOGS.LOG?
-        if (Config.debug) { console.debug(`DEBUG :: Calculating buy order...`); }
+        logs.log(`DEBUG :: Calculating buy order...`);
+
         // The buy price should be the current price + 3%.
         var buyPrice = calculateBuyPrice(currentPrice);
 
@@ -33,10 +33,7 @@ module.exports = {
         // Ensure that we've passed all the checks, and if we have, place the buy order.
         approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
 
-        // DOE WE NEED THIS IF STATMENT ANYMORE?
-        if (Config.debug) { 
-            logs.log(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
-        }
+        logs.log(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
         
         if (approved) {
             Binance.buyOrder(null, coin, 'ETH', buyPrice, quantity, function(response) {
