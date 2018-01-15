@@ -55,9 +55,32 @@ function validate(coin, targetPrice) {
 }
 
 function buy(coin, currentPrice, targetPrice) {
-	Buy.calculateBuyOrder(null, coin, currentPrice, targetPrice, function(error, buyPrice, quantity, potentialGain) {
-	
+	Buy.calculateBuyOrder(null, coin, currentPrice, targetPrice, function(error, response, buyPrice, quantity, potentialGain) {
+        if (Config.debug) {
+        	sell(coin, buyPrice, targetPrice, quantity, potentialGain)
+			return;
+        }
+		
+		if (response.status.trim() != 'FILLED') {
+            // If the order isn't immediately filled, we want to wait 1 second before creating the sell orders.
+            setTimeout(function() {
+                sell(coin, buyPrice, targetPrice, quantity, potentialGain);
+            }, 1000)
+
+            // We want to cancel the buy order after 5 seconds if it isn't filled.
+            stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin, buyPrice, 5000);
+        } else {
+            // If the order is immediately filled, we want to start creating the sell orders.
+            sell(coin, buyPrice, targetPrice, quantity, potentialGain);
+        }
 	});
+}
+
+function sell(coin, buyPrice, targetPrice, quantity, potentialGain) {
+	Sell.calculateSellOrders(null, coin, buyPrice, targetPrice, quantity, potentialGain, function(error, response, coin, buyPrice) {
+		
+	});
+	
 }
 
 

@@ -3,7 +3,7 @@ const Logging = require('./logging');
 
 module.exports = {
 	formatPrice: function(price) {
-		let decimalPlaces = price.length - 2;
+		let decimalPlaces = price.toString().length - 2;
 		let formattedPrice = undefined;
 		
 		if (decimalPlaces <= 6) {

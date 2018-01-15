@@ -33,7 +33,7 @@ module.exports = {
 	validTargetPrice: false,
 	highPotentialGain: false,
 	noRecentOrder: true,
-	noRecentcancel: true,
+	noRecentCancel: true,
 	// The stored messages.
 	messages: messages,
 	// Our purchase price limit in ETH.
