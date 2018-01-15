@@ -14,7 +14,9 @@ function calculateBuyQuantity(buyPrice) {
 }
 
 module.exports = {
-    calculateBuyOrder: function(coin, targetPrice, currentPrice) {
+    calculateBuyOrder: function(error, coin, currentPrice, targetPrice, callback) {
+		if (error) return console.error(error);
+		
         Logging.log(`DEBUG :: Calculating buy order...`);
 
         // The buy price should be the current price + 3%.
@@ -23,13 +25,13 @@ module.exports = {
         // Calculate the potential gain based on the buy price.
         var potentialGain = calculateBuyMaxPotentialGain(targetPrice, buyPrice);
         // We should only do this if the potential gains are greater than 25%.
-        highPotentialGain = potentialGain > 25;
+        Config.highPotentialGain = potentialGain > 25;
 
         // Calculate the quantity. We never want to spend more than 0.05 ETH.
         var quantity = calculateBuyQuantity(buyPrice);
 
         // Ensure that we've passed all the checks, and if we have, place the buy order.
-        approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
+        approved = Config.validCoin && Config.validTargetPrice && Config.noRecentOrder && Config.noRecentCancel && Config.highPotentialGain;
 
         Logging.log(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
         

@@ -2,76 +2,62 @@ const Discord = require('discord.js');
 const Config = require('./config');
 const Binance = require('./binance');
 const Parser = require('./parser');
+const Validator = require('./validator');
 const Buy = require('./buy-logic');
 const Sell = require('./sell-logic');
 const Logging = require('./logging');
 
 var client = new Discord.Client();
 
-// Remove the default arguments from the process.
-var args = process.argv.slice(2);
-var manual = args[0].trim().toLowerCase() == "MANUAL";
-// Check to see if this is a manual entry.
-if (manual) {
-    // We know the coin is valid because it's manual.
-    validCoin = true;
-    // Validate the target price entered, we know it's valid, we just need to call this to validate the current price as well as trigger the buy and sell logic.
-    validateTargetPrice(args[1], args[2]);
-}
-
-// Get a list of all available coins on Binance right now.
-var allCoins = [];
-Binance.allCoins(null, function(balances) {
-    for (var coin in balances) {
-        // We don't care about ETH, BTC, or USDT.
-        if (coin.toLowerCase().trim() != 'ETH' || coin.toLowerCase().trim() == 'BTC' || coin.toLowerCase().trim() == 'USDT') {
-            allCoins.push(coin.toLowerCase().trim());
-        }
-    }
-    // If debug mode is enabled, we want to parse through the config messages.
-    if (Config.debug) {
+function main() {
+	// Check to see if there were any command line arguments passed.
+	if (process.argv.length > 2) {
+		// Remove the two default process arguments for simplicity.
+		let args = process.argv.slice(2);
+		// Check if we're running in manual mode.
+		let manual = args[0].trim().toLowerCase() === "manual";
+		
+		// If we're running in manual mode, we know the coin and target price and can immediately kick off the validation process.
+		if (manual) {
+			let coin = args[1].trim().toUpperCase();
+			let targetPrice = args[2].trim();
+			// Validate the target price so we can continue.
+			Validator.validate(null, coin, targetPrice, function(error, coin, currentPrice, targetPrice) {
+				buy(coin, currentPrice, targetPrice);
+			});
+		}
+	}
+	
+	// Check if we're running in debug mode.
+	if (Config.debug) {
+		// If we're running in debug mode, iterate through the saved messages.
         Config.messages.forEach(function(message) {
-            parseMessage(message.toLowerCase());
+			message = message.toLowerCase();
+            parse(message);
         });
-    }
-});
-
-
-
-
-// Parse the message to return the data we need.
-function parseMessage(message) {
-    var coin = Parser.parseCoin(message, allCoins);
-    validateCoin(coin);
-    var targetPrice = Parser.parseTargetPrice(message);
-    validateTargetPrice(coin, targetPrice);
+	}
 }
 
-// Validate that the coin exists in Binance and has an exchange pair for ETH.
-function validateCoin(coin) {
-    if (Config.debug) { console.debug(`DEBUG :: Validating ${coin} has an ETH exchange on Binance.`); }
-    Binance.checkPrice(null, coin, 'ETH', function(price) {
-        validCoin = price != undefined;
-    });
+main();
+
+function parse(message) {
+	let coin = Parser.parseCoin(message);
+	let targetPrice = Parser.parseTargetPrice(message);
+	validate(coin, targetPrice);
 }
 
-// Validate that the coin is within range of ETH, and is not lower than the current price of ETH.
-function validateTargetPrice(coin, targetPrice) {
-    if (Config.debug) { console.debug(`DEBUG :: Validating ${coin} the price of the coin on Binance.`); }
-    Binance.checkPrice(null, coin, 'ETH', function(currentPrice) {
-        
-        // If the target price is less than the current price, it's not a valid target price.
-        if (targetPrice < currentPrice) {
-            validTargetPrice = false;
-        // If the target price is less than double of the current price, it's likely the target price. Also, we don't want to buy anything that's more than 0.04 ETH per coin.
-        } else if ((targetPrice / 2) < currentPrice && currentPrice < 0.04) {
-            validTargetPrice = true;
-            calculateBuyOrder(coin, targetPrice, currentPrice)
-        }
-        if (Config.debug) {
-            Logging.log(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`);
-        }
-    })
+function validate(coin, targetPrice) {
+	Validator.validate(null, coin, targetPrice, function(error, coin, currentPrice, targetPrice) {
+		if (Config.validCoin && Config.validTargetPrice) {
+			buy(coin, currentPrice, targetPrice);
+		}
+	});
+}
+
+function buy(coin, currentPrice, targetPrice) {
+	Buy.calculateBuyOrder(null, coin, currentPrice, targetPrice, function(error, buyPrice, quantity, potentialGain) {
+	
+	});
 }
 
 
@@ -121,14 +107,18 @@ client.on('message', function(message) {
 
         // If it is from the correct guild & the correct channel, try parsing it.
         if(isGuild && isChannel) {
-            parseMessage(message.content.toLowerCase());
+            parse(message.content.toLowerCase());
         }
     }
     // We don't care about exception handling.
     catch (e) {}
 });
 
+setTimeout(function() {
+	
+}, 10000);
+
 // Login to Discord.
-if (!Config.debug && !manual) { client.login(process.env.DISCORD_TOKEN.trim()); }
+if (!Config.debug) { client.login(process.env.DISCORD_TOKEN.trim()); }
 
 //#endregion

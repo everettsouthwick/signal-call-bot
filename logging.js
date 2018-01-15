@@ -1,5 +1,5 @@
-const Config = require('./config');
 const fs = require('fs');
+const Config = require('./config');
 
 var logs = [];
 

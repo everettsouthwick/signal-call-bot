@@ -1,6 +1,9 @@
-var messages = [];
+//const Binance = require('./binance');
 
-messages.push(`Coin: GVT
+var messages = [];
+var allCoins = [];
+
+messages.push(`Coin: $GVT
 price (BTC): 0.00200 Goal (BTC): 0.0039500
 price (ETH): 0.02090 Goal (ETH): 0.039000`);
 messages.push(`Coin is: $nav
@@ -12,10 +15,28 @@ Our goal is (btc) 0.0011800
 Current price (btc): 0.0006700
 Buy safe! Goodluck!`);
 
-exports.messages = messages;
-exports.debug = true;
-exports.validCoin = false;
-exports.validTargetPrice = false;
-exports.highPotentialGain = false;
-exports.noRecentOrder = true;
-exports.noRecentCancel = true;
+// Binance.allCoins(null, function(balances) {
+//     for (var coin in balances) {
+//         // We don't care about ETH, BTC, or USDT.
+//         if (coin != 'ETH' && coin != 'BTC' && coin != 'USDT') {
+//             allCoins.push(coin.trim().toUpperCase());
+//         }
+//     }
+// 	module.exports.allCoins = allCoins;
+// });
+
+module.exports = {
+	// Debug mode.
+	debug: true, 
+	// Parameters that will have to be met in order to initiate orders.
+	validCoin: false,
+	validTargetPrice: false,
+	highPotentialGain: false,
+	noRecentOrder: true,
+	noRecentcancel: true,
+	// The stored messages.
+	messages: messages,
+	// Our purchase price limit in ETH.
+	maximumPrice: 0.05,
+	allCoins: allCoins
+}
