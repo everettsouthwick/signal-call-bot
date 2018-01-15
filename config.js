@@ -27,7 +27,7 @@ Buy safe! Goodluck!`);
 
 module.exports = {
 	// Debug mode.
-	debug: true, 
+	debug: false, 
 	// Parameters that will have to be met in order to initiate orders.
 	validCoin: false,
 	validTargetPrice: false,

@@ -51,8 +51,6 @@ function parse(message) {
 
 function validate(coin, targetPrice) {
 	Validator.validate(null, coin, targetPrice, function(error, coin, currentPrice, targetPrice) {
-		console.log(Config.validCoin);
-		console.log(Config.validTargetPrice);
 		if (Config.validCoin && Config.validTargetPrice) {
 			buy(coin, currentPrice, targetPrice);
 		}
@@ -143,6 +141,6 @@ client.on('message', function(message) {
 });
 
 // Login to Discord.
-if (!Config.debug) { client.login(process.env.DISCORD_TOKEN.trim()); }
+// if (!Config.debug) { client.login(process.env.DISCORD_TOKEN.trim()); }
 
 //#endregion
