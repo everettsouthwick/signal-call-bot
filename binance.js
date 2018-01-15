@@ -26,8 +26,7 @@ module.exports = {
 
     buyOrder: function(error, coinSymbol, exchangePair, price, quantity, callback) {
         if (error) return console.error(error);
-        console.log(`\nBINANCE :: Creating buy order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} at ${new Date().toLocaleTimeString()}.\n`);
-        logs.binanceBuyOrderLog(coinSymbol, exchangePair, price, quantity);
+        logs.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair}.`);
         Binance.buy(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
         });
@@ -35,8 +34,7 @@ module.exports = {
 
     sellOrder: function(error, coinSymbol, exchangePair, price, quantity, potentialGain, callback) {
         if (error) return console.error(error);
-        console.log(`\nBINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}% at ${new Date().toLocaleTimeString()}.\n`);
-        logs.binanceCancelOrderLog(coinSymbol, exchangePair, price, quantity, potentialGain);
+        logs.log(`BINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}%`);
         Binance.sell(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
         });
@@ -44,8 +42,7 @@ module.exports = {
 
     cancelOrder: function(error, id, side, coinSymbol, exchangePair, callback) {
         if (error) return console.error(error);
-        console.log(`\nBINANCE :: Canceling ${side} order for ${coinSymbol} at ${new Date().toLocaleTimeString()}.\n`)
-        logs.binanceCancelOrderLog(id, side, coinSymbol, exchangePair);
+        logs.log(`BINANCE :: Canceling ${side} order for ${coinSymbol}`)
         Binance.cancel(`${coinSymbol}${exchangePair}`, id, function(response, symbol) {
             callback(response, symbol);
         });
@@ -53,8 +50,7 @@ module.exports = {
 
     checkOrderStatus: function(error, id, side, coinSymbol, exchangePair, callback) {
         if (error) return console.error(error);
-        console.log(`\nBINANCE :: Checking status of ${side} order for ${coinSymbol} at ${new Date().toLocaleTimeString()}.\n`);
-        logs.binanceCheckOrderStatusLog(id, side, coinSymbol, exchangePair);
+        console.log(`BINANCE :: Checking status of ${side} order for ${coinSymbol}`);
         Binance.orderStatus(`${coinSymbol}${exchangePair}`, id, function(orderStatus, symbol) {
             callback(orderStatus, symbol);
         });
@@ -62,8 +58,7 @@ module.exports = {
 
     checkBalance: function(error, coinSymbol, callback) {
         if (error) return console.error(error);
-        console.log(`\nBINANCE :: Checking balance of ${coinSymbol} at ${new Date().toLocaleTimeString()}.\n`)
-        logs.binanceCheckBalanceLog(coinSymbol);
+        logs.log(`BINANCE :: Checking balance of ${coinSymbol}`)
         Binance.balance(function(balances) {
             let balance = balances[coinSymbol].available;
             callback(balance);

@@ -69,8 +69,7 @@ function validateTargetPrice(coin, targetPrice) {
             calculateBuyOrder(coin, targetPrice, currentPrice)
         }
         if (Config.debug) {
-            console.debug(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`);
-            logs.validateTargetPrice(coin, targetPrice, validateTargetPrice);
+            logs.log(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`);
         }
     })
 }
@@ -110,7 +109,7 @@ function cleanRemainingBalance(coin, buyPrice) {
 
 // Check to see when we're connected to Discord.
 client.on('ready', () => {
-    console.log("DISCORD :: Login successful!");
+    log.log("DISCORD :: Login successful!");
 });
 
 // Event handler for new messages.

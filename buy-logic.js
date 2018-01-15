@@ -17,6 +17,7 @@ function calculateBuyQuantity(buyPrice) {
 
 module.exports = {
     calculateBuyOrder: function(coin, targetPrice, currentPrice) {
+        // CAHNGE THIS CONSOLE.DEBUG TO LOGS.LOG?
         if (Config.debug) { console.debug(`DEBUG :: Calculating buy order...`); }
         // The buy price should be the current price + 3%.
         var buyPrice = calculateBuyPrice(currentPrice);
@@ -32,9 +33,9 @@ module.exports = {
         // Ensure that we've passed all the checks, and if we have, place the buy order.
         approved = validCoin && validTargetPrice && noRecentOrder && noRecentCancel && highPotentialGain;
 
+        // DOE WE NEED THIS IF STATMENT ANYMORE?
         if (Config.debug) { 
-            console.debug(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
-            logs.calculateBuyOrderLog(coin, buyPrice, potentialGain, quantity, approved);
+            logs.log(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
         }
         
         if (approved) {
