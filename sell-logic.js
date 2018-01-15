@@ -19,7 +19,7 @@ function calculateSellQuantity(i, quantity) {
     var sellQuantity = 0;
     if (quantity % 4 != 0) {
         if (i == 1) {
-            sellQuantity = Math.floor(quantity / 4) + quantity % 4;
+            sellQuantity = Math.floor(quantity / 4) + quantity % 4 - 1;
         }
         else {
             sellQuantity = Math.floor(quantity / 4);
@@ -27,7 +27,7 @@ function calculateSellQuantity(i, quantity) {
     } else {
         sellQuantity = quantity / 4;
     }
-    return sellQuantity - 1;
+    return sellQuantity;
 }
 
 module.exports = {
@@ -42,7 +42,7 @@ module.exports = {
             // Tier the target price to help ensure that we sell all of our coins.
             let sellOrderPotentialGain = calculateSellPotentialGain(i, potentialGain);
     
-            // Calculate the sell price
+            // Calculate the sell price.
             let sellPrice = calculateSellPrice(i, buyPrice, sellOrderPotentialGain);
     		
 			let approved = sellQuantity > 0;

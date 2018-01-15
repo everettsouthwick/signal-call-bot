@@ -23,8 +23,11 @@ function main() {
 			let targetPrice = args[2].trim();
 			// Validate the target price so we can continue.
 			Validator.validate(null, coin, targetPrice, function(error, coin, currentPrice, targetPrice) {
-				buy(coin, currentPrice, targetPrice);
+				if (Config.validCoin && Config.validTargetPrice) {
+					buy(coin, currentPrice, targetPrice);
+				}
 			});
+			return;
 		}
 	}
 	
@@ -48,6 +51,8 @@ function parse(message) {
 
 function validate(coin, targetPrice) {
 	Validator.validate(null, coin, targetPrice, function(error, coin, currentPrice, targetPrice) {
+		console.log(Config.validCoin);
+		console.log(Config.validTargetPrice);
 		if (Config.validCoin && Config.validTargetPrice) {
 			buy(coin, currentPrice, targetPrice);
 		}
@@ -78,16 +83,15 @@ function buy(coin, currentPrice, targetPrice) {
 
 function sell(coin, buyPrice, targetPrice, quantity, potentialGain) {
 	Sell.calculateSellOrders(null, coin, buyPrice, targetPrice, quantity, potentialGain, function(error, response, coin, buyPrice) {
-		
+		stageCancelOrder(response.id.trim(), response.side.trim().toLowerCase(), coin, sellPrice, 300000)
 	});
-	
 }
 
 
 function stageCancelOrder(id, side, coin, buyPrice, time) {
     setTimeout(function() {
         Binance.checkOrderStatus(null, id, side, coin, 'ETH', function(orderStatus, symbol) {
-            if (orderStatus.status.trim().toLowerCase() != 'FILLED') {
+            if (orderStatus.status.trim() != 'FILLED') {
                 Binance.cancelOrder(null, id, side, coin, 'ETH', function(response, coinSymbol) {
                     noRecentCancel = false;
                     if (side == "sell") {
@@ -112,6 +116,7 @@ function cleanRemainingBalance(coin, buyPrice) {
             });
         }
     })
+	Logging.logOutput();
 }
 
 //#region Discord functionality
@@ -136,10 +141,6 @@ client.on('message', function(message) {
     // We don't care about exception handling.
     catch (e) {}
 });
-
-setTimeout(function() {
-	
-}, 10000);
 
 // Login to Discord.
 if (!Config.debug) { client.login(process.env.DISCORD_TOKEN.trim()); }
