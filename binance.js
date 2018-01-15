@@ -1,8 +1,6 @@
 const Binance = require('node-binance-api');
 const Config = require('./config');
-
-// require logs
-const logs = require('./logs');
+const Logging = require('./logging');
 
 Binance.options({
     'APIKEY': process.env.BINANCE_API_KEY.trim(),
@@ -26,7 +24,7 @@ module.exports = {
 
     buyOrder: function(error, coinSymbol, exchangePair, price, quantity, callback) {
         if (error) return console.error(error);
-        logs.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair}.`);
+        Logging.log(`BINANCE :: Creating buy order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair}.`);
         Binance.buy(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
         });
@@ -34,7 +32,7 @@ module.exports = {
 
     sellOrder: function(error, coinSymbol, exchangePair, price, quantity, potentialGain, callback) {
         if (error) return console.error(error);
-        logs.log(`BINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}%`);
+        Logging.log(`BINANCE :: Creating sell order for ${quantity} ${coinSymbol} priced at ${price} ${exchangePair} for a potential gain of ${potentialGain}%`);
         Binance.sell(`${coinSymbol}${exchangePair}`, quantity, price, {}, function(response) {
             callback(response);
         });
@@ -42,7 +40,7 @@ module.exports = {
 
     cancelOrder: function(error, id, side, coinSymbol, exchangePair, callback) {
         if (error) return console.error(error);
-        logs.log(`BINANCE :: Canceling ${side} order for ${coinSymbol}`)
+        Logging.log(`BINANCE :: Canceling ${side} order for ${coinSymbol}`)
         Binance.cancel(`${coinSymbol}${exchangePair}`, id, function(response, symbol) {
             callback(response, symbol);
         });
@@ -58,7 +56,7 @@ module.exports = {
 
     checkBalance: function(error, coinSymbol, callback) {
         if (error) return console.error(error);
-        logs.log(`BINANCE :: Checking balance of ${coinSymbol}`)
+        Logging.log(`BINANCE :: Checking balance of ${coinSymbol}`)
         Binance.balance(function(balances) {
             let balance = balances[coinSymbol].available;
             callback(balance);

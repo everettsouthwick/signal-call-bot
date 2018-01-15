@@ -4,7 +4,7 @@ const Binance = require('./binance');
 const Parser = require('./parser');
 const Buy = require('./buy-logic');
 const Sell = require('./sell-logic');
-const logs = require('./logs');
+const Logging = require('./logging');
 
 var client = new Discord.Client();
 
@@ -69,7 +69,7 @@ function validateTargetPrice(coin, targetPrice) {
             calculateBuyOrder(coin, targetPrice, currentPrice)
         }
         if (Config.debug) {
-            logs.log(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`);
+            Logging.log(`DEBUG :: (\$${coin}) Target price: ${targetPrice} Current price: ${currentPrice} Valid target price: ${validTargetPrice}`);
         }
     })
 }

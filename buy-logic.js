@@ -1,7 +1,5 @@
 const Config = require('./config');
-
-// requires logs.js
-const logs = require('./logs');
+const Logging = require('./logging');
 
 function calculateBuyPrice(currentPrice) {
     return parseFloat(currentPrice * (1 + 0.03)).toFixed(6);
@@ -17,7 +15,7 @@ function calculateBuyQuantity(buyPrice) {
 
 module.exports = {
     calculateBuyOrder: function(coin, targetPrice, currentPrice) {
-        // CAHNGE THIS CONSOLE.DEBUG TO LOGS.LOG?
+        // CAHNGE THIS CONSOLE.DEBUG TO Logging.log?
         if (Config.debug) { console.debug(`DEBUG :: Calculating buy order...`); }
         // The buy price should be the current price + 3%.
         var buyPrice = calculateBuyPrice(currentPrice);
@@ -35,7 +33,7 @@ module.exports = {
 
         // DOE WE NEED THIS IF STATMENT ANYMORE?
         if (Config.debug) { 
-            logs.log(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
+            Logging.log(`DEBUG :: (\$${coin}) Buy Price: ${buyPrice} Potential Gain: ${potentialGain} Quantity: ${quantity} Approved: ${approved}`);
         }
         
         if (approved) {
