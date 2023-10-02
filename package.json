@@ -4,7 +4,7 @@
   "description": "This is how we make millions",
   "main": "bot.js",
   "dependencies": {
-    "@google-cloud/vision": "^0.14.0",
+    "@google-cloud/vision": "^4.0.0",
     "discord.js": "^11.2.1",
     "node-binance-api": "^0.3.7"
   },
